@@ -57,6 +57,7 @@ describe("tasks-api", () => {
     assert.equal(response.status, 200);
     assert.equal(response.json.status, "ok");
     assert.equal(response.json.service, "tasks-api");
+    assert.equal(response.json.release, "gitops");
   });
 
   it("starts with no tasks", async () => {

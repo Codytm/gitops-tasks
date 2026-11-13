@@ -36,6 +36,14 @@ docker run -d --name jenkins --restart=unless-stopped \
   -e "GITHUB_TOKEN=${github_token}" \
   gitops-tasks-jenkins:local
 
+# Docker Desktop presents the mounted socket as root:root mode 660 inside the container.
+for _ in $(seq 1 30); do
+  if docker exec -u root jenkins chmod 666 /var/run/docker.sock; then
+    break
+  fi
+  sleep 1
+done
+
 echo "Jenkins is starting at http://127.0.0.1:8081"
 echo "Admin user: admin"
 echo "Admin password file: ${password_file}"

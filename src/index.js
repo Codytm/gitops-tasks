@@ -11,6 +11,7 @@ function createApp() {
     res.json({
       status: "ok",
       service: "tasks-api",
+      release: "gitops",
       version: process.env.APP_VERSION || "dev",
     });
   });
