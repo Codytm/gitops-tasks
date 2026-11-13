@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: localhost:5001/tasks-api
+  tag: dev
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30080
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+probes:
+  readiness:
+    initialDelaySeconds: 2
+    periodSeconds: 5
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
