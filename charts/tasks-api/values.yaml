@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: localhost:5001/tasks-api
-  tag: dev
+  tag: 46aa81b
   pullPolicy: IfNotPresent
 
 service:
