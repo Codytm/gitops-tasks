@@ -97,29 +97,18 @@ Jenkins runs in Docker on [http://127.0.0.1:8081](http://127.0.0.1:8081). The im
 - Password: the file printed by the script, `~/.config/gitops-tasks/jenkins-admin-password`
 - GitHub credential id: `github` (your `gh` user and token, stored in Jenkins, not in git)
 
-Create the Pipeline job once Jenkins is up:
-
-```sh
-curl -sS -u "admin:$(cat ~/.config/gitops-tasks/jenkins-admin-password)" \
-  -H "Content-Type: application/xml" \
-  --data-binary @jenkins/tasks-api-job.xml \
-  "http://127.0.0.1:8081/createItem?name=tasks-api"
-```
-
-If Jenkins asks for a crumb, open the script console is not required; use the crumb issuer:
+Create the Pipeline job once Jenkins is up. Keep the crumb and the POST in the same cookie jar, or Jenkins returns 403:
 
 ```sh
 PASS="$(cat ~/.config/gitops-tasks/jenkins-admin-password)"
-CRUMB=$(curl -sS -u "admin:${PASS}" http://127.0.0.1:8081/crumbIssuer/api/json | python3 -c 'import json,sys; print(json.load(sys.stdin)["crumb"])')
-curl -sS -u "admin:${PASS}" -H "Jenkins-Crumb: ${CRUMB}" -H "Content-Type: application/xml" \
+JAR="$(mktemp)"
+CRUMB_JSON=$(curl -sS -c "$JAR" -b "$JAR" -u "admin:${PASS}" http://127.0.0.1:8081/crumbIssuer/api/json)
+CRUMB=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["crumb"])' "$CRUMB_JSON")
+curl -sS -c "$JAR" -b "$JAR" -u "admin:${PASS}" -H "Jenkins-Crumb: ${CRUMB}" \
+  -H "Content-Type: application/xml" \
   --data-binary @jenkins/tasks-api-job.xml \
   "http://127.0.0.1:8081/createItem?name=tasks-api"
-```
-
-Build it from the UI, or:
-
-```sh
-curl -sS -u "admin:${PASS}" -H "Jenkins-Crumb: ${CRUMB}" -X POST \
+curl -sS -c "$JAR" -b "$JAR" -u "admin:${PASS}" -H "Jenkins-Crumb: ${CRUMB}" -X POST \
   "http://127.0.0.1:8081/job/tasks-api/build"
 ```
 
@@ -167,12 +156,3 @@ Roll back by reverting the deploy commit and pushing `main`. Argo CD applies the
 git revert <deploy-commit-sha>
 git push origin main
 ```
-
-## Interview points
-
-- CI and CD are split. Jenkins produces an artifact and updates Git. Argo CD reconciles the cluster to Git.
-- The image tag is the git SHA of the commit that was built, so a running pod maps back to a commit.
-- Helm is the package. Raw manifests in `k8s/` are the same app before it was parameterized.
-- Probes keep traffic off a container that is not ready, and restart one that is wedged. Requests and limits are how the scheduler and kubelet account for the container.
-- Rollback is a Git revert, not a manual `kubectl set image`.
-- `[skip ci]` on the tag commit breaks the loop where a deploy commit would otherwise trigger another build.
