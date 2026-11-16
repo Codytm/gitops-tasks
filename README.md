@@ -29,14 +29,6 @@ Deploy commits use the message `chore: deploy image <sha> [skip ci]` so the pipe
 | `argocd/application.yaml` | Argo CD Application |
 | `scripts/kind-with-registry.sh` | kind cluster plus a registry on `localhost:5001` |
 
-## What is already on this Mac
-
-- Docker Desktop is the engine. Leave its built-in Kubernetes turned off. kind owns the cluster.
-- The Docker CLI is `~/.docker/bin/docker`.
-- `gh` is logged in as the owner of the private repo `Codytm/gitops-tasks`.
-
-This Mac is on macOS 14, and current Homebrew bottles are not published for it. `kubectl`, `kind`, Helm, and the Argo CD CLI are installed as release binaries in `~/.local/bin` instead of compiling them with Homebrew. The container image still uses Node 22. The host Node is whatever is already installed, as long as it is 22 or newer.
-
 ## Phase 0 — cluster and registry
 
 ```sh
